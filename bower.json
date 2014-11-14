@@ -1,0 +1,28 @@
+{
+    "name": "nzAccordiScroll",
+    "version": "1.0.0",
+    "authors": [
+        "tannerlinsley"
+    ],
+    "description": "A superlative scrolling accordion directive for AngularJS.  This ain't yo grandma's accordion...",
+    "main": "nzAccordiScroll.js",
+    "keywords": [
+        "angular",
+        "angularjs",
+        "scroll",
+        "stack",
+        "nozzle"
+    ],
+    "license": "MIT",
+    "ignore": [
+        "**/.*",
+        "node_modules",
+        "bower_components",
+        "test",
+        "tests"
+    ],
+    "dependencies": {
+        "angular": "~1.3.2",
+        "jquery": "~2.1.1"
+    }
+}
