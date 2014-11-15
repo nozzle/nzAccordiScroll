@@ -1,5 +1,5 @@
 # nzAccordiScroll
-An amazingly simple scroll replacement for Angular!
+A superlative, scrolling accordion directive for AngularJS.  This ain't yo grandma's accordion...
 
 ## [Demo](http://codepen.io/tannerlinsley/pen/Eaxmwz)
 
