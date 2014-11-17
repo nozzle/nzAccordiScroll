@@ -16,9 +16,15 @@
             controller: function($scope) {
 
                 var root = this;
+                root.states = [];
                 root.stacks = [];
-                root.topStacks = [];
-                root.bottomStacks = [];
+                root.stackElements = [];
+                root.topActive = [];
+                root.bottomActive = [];
+                root.topBreaks = [];
+                root.bottomBreaks = [];
+                root.toppedOut = 0;
+                root.bottomedOut = 0;
 
                 if ($scope.stackSize &&
                     typeof $scope.stackSize == 'object') {
@@ -28,39 +34,44 @@
                     root.maxTop = $scope.stackSize;
                     root.maxBottom = $scope.stackSize;
                 } else {
-                    root.maxTop = 9999999;
-                    root.maxBottom = 9999999;
+                    root.maxTop = null;
+                    root.maxBottom = null;
                 }
 
                 console.log(root.maxTop, root.maxBottom);
 
                 root.register = function(index, el) {
-                    var topHeight = index + 1 > root.maxTop ? 4 : el.outerHeight();
-                    var bottomHeight = /*index < root.maxBottom ? 4 :*/ el.outerHeight();
-                    var previous = root.topStacks[index - 1];
-                    root.topStacks[index] = topHeight + (previous ? previous : 0);
-                    root.stacks[index] = bottomHeight;
-                    calculateNexts(index, el);
+                    root.states[index] = 3;
+                    root.stacks[index] = el.outerHeight();
+                    root.stackElements[index] = el;
+                    calculateBreaks();
                     $scope.$broadcast('build');
                 };
 
-                function calculateNexts() {
-                    root.bottomStacks = [];
+                function calculateBreaks() {
+                    root.topBreaks = [];
+                    root.bottomBreaks = [];
                     for (var i = 0; i < root.stacks.length; i++) {
-                        var height = 0;
-                        for (var i2 = i; i2 < root.stacks.length; i2++) {
-
-                            height += root.stacks[i2];
+                        var topBreak = 0;
+                        var start = i - root.maxTop >= 0 ? i - root.maxTop : 0;
+                        for (var c = start; c < i; c++) {
+                            topBreak += root.stacks[c];
                         }
-                        root.bottomStacks[i] = height;
+                        var bottomBreak = 0;
+                        var end = i + root.maxBottom <= root.stacks.length - 1 ? i + root.maxBottom : root.stacks.length - 1;
+                        for (var b = i; b < end; b++) {
+                            bottomBreak += root.stacks[b];
+                        }
+                        root.topBreaks[i] = topBreak;
+                        root.bottomBreaks[i] = bottomBreak;
                     }
-                    //root.bottomStacks = root.bottomStacks.reverse();
-                    window.tanner = root.bottomStacks;
+                    console.log(root.topBreaks);
+                    console.log(root.bottomBreaks);
                 }
 
                 root.refresh = function() {
-                    root.topStacks = [];
-                    root.bottomStacks = [];
+                    root.topBreaks = [];
+                    root.bottomBreaks = [];
                     $scope.$broadcast('reregister');
                 };
             },
@@ -95,8 +106,10 @@
                 var elementTop = el[0].offsetTop;
                 var elementRelativeTop = elementTop - containerTop;
                 var elementRelativeBottom = elementRelativeTop + el.outerHeight();
-                var previousBuffer;
-                var nextBuffer;
+                var previousHeight;
+                var previousBreak;
+                var nextHeight;
+                var nextBreak;
 
                 root.register(index, el);
                 update();
@@ -105,7 +118,7 @@
 
                 $scope.go = function() {
                     container.animate({
-                        scrollTop: elementRelativeTop - previousBuffer
+                        scrollTop: elementRelativeTop - previousBreak
                     }, 800);
                 };
 
@@ -129,26 +142,112 @@
                     elementTop = el[0].offsetTop;
                     elementRelativeTop = elementTop - containerTop;
                     elementRelativeBottom = elementRelativeTop + el.outerHeight();
-                    previousBuffer = root.topStacks[index - 1];
-                    nextBuffer = root.bottomStacks[index + 1];
-                    previousBuffer = previousBuffer ? previousBuffer : 0;
-                    nextBuffer = nextBuffer ? nextBuffer : 0;
+                    previousBreak = root.topBreaks[index - root.toppedOut];
+                    nextBreak = root.bottomBreaks[index + root.bottomedOut];
 
-                    if (scrollTop + previousBuffer > elementRelativeTop) {
+                    if (!previousHeight) {
+                        previousHeight = root.stackElements[index - 1] ? root.stackElements[index - 1].outerHeight() : 0;
+                    }
+                    if (!nextHeight) {
+                        nextHeight = root.stackElements[index + 1] ? root.stackElements[index + 1].outerHeight() : 0;
+                    }
+
+                    var state = root.states[index];
+                    var pastTop = scrollTop + previousBreak + previousHeight > elementRelativeTop;
+                    var pastPreviousBreak = scrollTop + previousBreak > elementRelativeTop;
+                    var pastNextBreak = scrollBottom - nextBreak < elementRelativeBottom;
+                    var pastBottom = scrollBottom - nextBreak - nextHeight < elementRelativeBottom;
+
+
+
+
+                    // Determine State
+
+                    if (root.states[index] === 1) {
+                        if (root.states[index + root.maxTop] == 3) {
+                            // Move Down
+                            root.states[index] = 2;
+                            root.toppedOut--;
+                            return;
+                        }
+                        return;
+                    }
+
+                    if (root.states[index] === 2) {
+                        if (root.states[index + root.maxTop] == 2) {
+                            // Move Up
+                            root.states[index] = 1;
+                            root.toppedOut++;
+                            return;
+                        }
+                        if (!pastTop) {
+                            // Move Down
+                            root.states[index] = 3;
+                            update();
+                            return;
+                        }
                         el.css({
-                            transform: 'translateY(' + (previousBuffer + scrollTop - elementRelativeTop) + 'px)',
+                            transform: 'translateY(' + (scrollTop + previousBreak - elementRelativeTop) + 'px)',
                             zIndex: 1
                         });
-                    } else if (scrollBottom - nextBuffer < elementRelativeBottom) {
-                        el.css({
-                            transform: 'translateY(' + (scrollBottom - elementRelativeBottom - nextBuffer) + 'px)',
-                            zIndex: -index + root.stacks.length
-                        });
-                    } else {
+                        return;
+                    }
+
+                    if (root.states[index] == 3) {
+                        if (pastPreviousBreak) {
+                            // Move Up
+                            root.states[index] = 2;
+                            update();
+                            return;
+                        }
+                        if (pastNextBreak) {
+                            // Move Down
+                            root.states[index] = 4;
+                            update();
+                            return;
+                        }
                         el.css({
                             transform: 'translateY(0px)',
                             zIndex: -index + root.stacks.length
                         });
+                        return;
+                    }
+
+                    if (root.states[index] === 4) {
+                        if (root.states[index - root.maxBottom] == 4) {
+                            // Move down
+                            root.states[index] = 5;
+                            root.bottomedOut++;
+                            update();
+                            return;
+                        }
+                        if (!pastBottom) {
+                            // Move Down
+                            root.states[index] = 3;
+                            update();
+                            return;
+                        }
+                        el.css({
+                            transform: 'translateY(' + (scrollBottom - nextBreak - elementRelativeBottom) + 'px)',
+                            zIndex: -index + root.stacks.length
+                        });
+                        return;
+                    }
+
+
+                    if (root.states[index] === 5) {
+                        if (root.states[index - root.maxTop] == 3) {
+                            // Move Up
+                            root.states[index] = 4;
+                            root.bottomedOut--;
+                            update();
+                            return;
+                        }
+                        el.css({
+                            transform: 'translateY(0px)',
+                            zIndex: -index + root.stacks.length
+                        });
+                        return;
                     }
                 }
             },
