@@ -1,7 +1,7 @@
 # nzAccordiScroll
 A superlative, scrolling accordion directive for AngularJS.  This ain't yo grandma's accordion...
 
-## [Demo](http://codepen.io/tannerlinsley/pen/Eaxmwz)
+## [Demo](http://codepen.io/tannerlinsley/pen/vEEZgZ)
 
 ## Install
 1. `bower install nz-sweet-alert`
