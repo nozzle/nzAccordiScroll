@@ -157,6 +157,7 @@
 
                 clone.click(go);
                 root.register(index, el);
+                angular.element(window).bind('scroll', update);
                 content.bind('scroll', update);
                 update();
 
@@ -191,6 +192,18 @@
 
 
                 function update() {
+
+                    root.toppedOut = 0;
+                    root.bottomedOut = 0;
+                    for (var i = root.states.length - 1; i >= 0; i--) {
+                        if (root.states[i] == 1) {
+                            root.toppedOut++;
+                        }
+                        if (root.states[i] == 5) {
+                            root.bottomedOut++;
+                        }
+                    }
+
                     scrollTop = content.scrollTop();
                     scrollBottom = scrollTop + content.innerHeight();
                     contentTop = content[0].offsetTop;
@@ -223,7 +236,6 @@
                             if (root.states[index] > 1) {
                                 root.states[index] = 1;
                                 root.toppedOut++;
-                                update();
                             }
 
                             clone.css({
@@ -240,13 +252,11 @@
                             if (root.states[index] == 1) {
                                 root.states[index] = 2;
                                 root.toppedOut--;
-                                update();
                             }
 
                             // make sticky
                             if (root.states[index] > 2) {
                                 root.states[index] = 2;
-                                update();
                             }
 
                             clone.css({
@@ -266,7 +276,6 @@
                             if (root.states[index] < 5) {
                                 root.states[index] = 5;
                                 root.bottomedOut++;
-                                update();
                             }
 
                             clone.css({
@@ -283,13 +292,11 @@
                             if (root.states[index] == 5) {
                                 root.states[index] = 4;
                                 root.bottomedOut--;
-                                update();
                             }
 
                             // make sticky
                             if (root.states[index] < 4) {
                                 root.states[index] = 4;
-                                update();
                             }
 
                             clone.css({
