@@ -18,8 +18,6 @@
 
                 var root = this;
 
-                window.tanner = root;
-
                 root.states = [];
                 root.stacks = [];
                 root.stackElements = [];
@@ -36,20 +34,20 @@
                     root.hasMaxTop = true;
                     root.hasMaxBottom = true;
                     if (typeof $scope.showStacks == 'object') {
-                        root.maxTop = $scope.showStacks[0] - 1;
-                        root.maxBottom = $scope.showStacks[1] + 1;
+                        root.maxTop = $scope.showStacks[0];
+                        root.maxBottom = $scope.showStacks[1] + 2;
                     } else if (typeof $scope.showStacks == 'number') {
-                        root.maxTop = $scope.showStacks - 1;
-                        root.maxBottom = $scope.showStacks + 1;
+                        root.maxTop = $scope.showStacks;
+                        root.maxBottom = $scope.showStacks + 2;
                     }
                     if (typeof root.maxTop != 'undefined' &&
-                        root.maxTop < 0) {
-                        root.maxTop = 0;
+                        root.maxTop < 1) {
+                        root.maxTop = 1;
                     }
 
                     if (typeof root.maxBottom != 'undefined' &&
-                        root.maxBottom < 1) {
-                        root.maxBottom = 1;
+                        root.maxBottom < 3) {
+                        root.maxBottom = 3;
                     }
                 }
 
