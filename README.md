@@ -9,19 +9,39 @@ A superlative, scrolling accordion directive for AngularJS.  This ain't yo grand
 3. Include `nzAccordiScroll` as a dependency (i.e. in `app.js`)
 
 Utilize Like So:
+
+Basic Usage:
 ```html
 <div nz-accordi-scroll>
-	<stack>Section 1</stack>
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod...
-    <stack>Section 2</stack>
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod...
-    <stack>Section 3</stack>
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod...
-    <stack>Section 4</stack>
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod...
+    <stack>Stack 1</stack>
+    Some Content...
+    <stack>Stack 2</stack>
+    Some Content...
+    <stack>Stack 2</stack>
+    Some Content...
+</div>
+```
+Custom Top/Bottom Max's:
+```html
+<div nz-accordi-scroll show-stacks="[4, 4]">
+    <stack>Stack 1</stack>
+    Some Content...
+    <stack>Stack 2</stack>
+    Some Content...
+    <stack>Stack 2</stack>
+    Some Content...
+</div>
+```
+Custom Collapse Size:
+```html
+<div nz-accordi-scroll show-stacks="0" collapse-size="10">
+    <stack>Stack 1</stack>
+    Some Content...
+    <stack>Stack 2</stack>
+    Some Content...
+    <stack>Stack 2</stack>
+    Some Content...
 </div>
 ```
 
-
-
-Happy Scrolling!
+Happy AccordiScrolling!
