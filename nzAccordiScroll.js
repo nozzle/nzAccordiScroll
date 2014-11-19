@@ -7,15 +7,19 @@
             restrict: 'EA',
             transclude: true,
             scope: {
-                stackSize: '=',
+                showStacks: '=',
+                collapseSize: '='
             },
             replace: true,
             template: [
-                '<div class="nzAccordiScroll" ng-transclude></div>'
+                '<div class="nzAccordiScroll"><div class="nzAccordiScroll-content" ng-transclude></div></div>'
             ].join(' '),
             controller: function($scope) {
 
                 var root = this;
+
+                window.tanner = root;
+
                 root.states = [];
                 root.stacks = [];
                 root.stackElements = [];
@@ -26,26 +30,43 @@
                 root.toppedOut = 0;
                 root.bottomedOut = 0;
 
-                if ($scope.stackSize &&
-                    typeof $scope.stackSize == 'object') {
-                    root.maxTop = $scope.stackSize[0];
-                    root.maxBottom = $scope.stackSize[1];
-                } else if ($scope.stackSize) {
-                    root.maxTop = $scope.stackSize;
-                    root.maxBottom = $scope.stackSize;
-                } else {
-                    root.maxTop = null;
-                    root.maxBottom = null;
+                root.collapseSize = $scope.collapseSize || 2;
+
+                if (typeof $scope.showStacks != 'undefined') {
+                    root.hasMaxTop = true;
+                    root.hasMaxBottom = true;
+                    if (typeof $scope.showStacks == 'object') {
+                        root.maxTop = $scope.showStacks[0] - 1;
+                        root.maxBottom = $scope.showStacks[1] + 1;
+                    } else if (typeof $scope.showStacks == 'number') {
+                        root.maxTop = $scope.showStacks - 1;
+                        root.maxBottom = $scope.showStacks + 1;
+                    }
+                    if (typeof root.maxTop != 'undefined' &&
+                        root.maxTop < 0) {
+                        root.maxTop = 0;
+                    }
+
+                    if (typeof root.maxBottom != 'undefined' &&
+                        root.maxBottom < 1) {
+                        root.maxBottom = 1;
+                    }
                 }
 
-                console.log(root.maxTop, root.maxBottom);
+
+
 
                 root.register = function(index, el) {
+                    root.stacks[index] = el.outerHeight() - 1;
                     root.states[index] = 3;
-                    root.stacks[index] = el.outerHeight();
                     root.stackElements[index] = el;
+                    if (!root.hasMaxTop) {
+                        root.maxTop = root.stacks.length;
+                    }
+                    if (!root.hasMaxBottom) {
+                        root.maxBottom = root.stacks.length;
+                    }
                     calculateBreaks();
-                    $scope.$broadcast('build');
                 };
 
                 function calculateBreaks() {
@@ -54,19 +75,21 @@
                     for (var i = 0; i < root.stacks.length; i++) {
                         var topBreak = 0;
                         var start = i - root.maxTop >= 0 ? i - root.maxTop : 0;
-                        for (var c = start; c < i; c++) {
-                            topBreak += root.stacks[c];
+                        for (var b = 0; b < root.stacks.length; b++) {
+                            if (b > start && b <= i) {
+                                topBreak += root.stacks[b];
+                            }
                         }
                         var bottomBreak = 0;
-                        var end = i + root.maxBottom <= root.stacks.length - 1 ? i + root.maxBottom : root.stacks.length - 1;
-                        for (var b = i; b < end; b++) {
-                            bottomBreak += root.stacks[b];
+                        var end = i + root.maxBottom <= root.stacks.length ? i + root.maxBottom : root.stacks.length;
+                        for (var c = 0; c < root.stacks.length; c++) {
+                            if (c > i && c <= end) {
+                                bottomBreak += root.stacks[c];
+                            }
                         }
                         root.topBreaks[i] = topBreak;
                         root.bottomBreaks[i] = bottomBreak;
                     }
-                    console.log(root.topBreaks);
-                    console.log(root.bottomBreaks);
                 }
 
                 root.refresh = function() {
@@ -76,7 +99,15 @@
                 };
             },
             link: function($scope, el, attrs) {
-                el.css('overflow', 'scroll');
+                el.css({
+                    position: 'relative'
+                });
+                var content = el.find('.nzAccordiScroll-content').css({
+                    overflow: 'scroll',
+                    height: '100%',
+                    width: '100%',
+                    zIndex: -1
+                });
             }
         };
     });
@@ -85,7 +116,6 @@
         return {
             restrict: 'EA',
             transclude: true,
-            scope: true,
             replace: true,
             require: '^nzAccordiScroll',
             template: [
@@ -93,12 +123,25 @@
             ].join(' '),
             link: function($scope, el, attrs, root) {
 
+                var container = el.closest('.nzAccordiScroll');
+                var content = el.closest('.nzAccordiScroll-content');
+
                 el.css({
                     cursor: 'pointer',
-                    position: 'relative'
+                    position: 'relative',
+                    transition: 'all .1s linear'
                 });
 
-                var container = el.closest('.nzAccordiScroll');
+                var clone = el.clone().appendTo(container);
+
+                clone.css({
+                    position: 'absolute',
+                    width: '100%',
+                    display: 'none',
+                    bottom: '0'
+                });
+
+
                 var index = el.siblings(".stack").andSelf().index(el);
                 var scrollTop = container.scrollTop();
                 var scrollBottom = scrollTop + container.innerHeight();
@@ -111,16 +154,30 @@
                 var nextHeight;
                 var nextBreak;
 
+                clone.click(go);
                 root.register(index, el);
+                content.bind('scroll', update);
                 update();
 
-                container.bind('scroll', update);
+                if (root.preScroll) {
+                    clearTimeout(root.preScroll);
+                }
+                root.preScroll = setTimeout(function() {
+                    content.animate({
+                        scrollTop: content[0].scrollHeight > 800 ? 800 : content[0].scrollHeight
+                    }, 0);
+                    content.animate({
+                        scrollTop: 0
+                    }, 800);
+                }, 400);
 
-                $scope.go = function() {
-                    container.animate({
+                $scope.go = go;
+
+                function go() {
+                    content.animate({
                         scrollTop: elementRelativeTop - previousBreak
                     }, 800);
-                };
+                }
 
                 $scope.$on('$destroy', function() {
                     root.refresh();
@@ -130,20 +187,17 @@
                     root.register(index, el);
                 });
 
-                $scope.$on('build', function() {
-                    update();
-                });
 
 
                 function update() {
-                    scrollTop = container.scrollTop();
-                    scrollBottom = scrollTop + container.innerHeight();
-                    containerTop = container[0].offsetTop;
+                    scrollTop = content.scrollTop();
+                    scrollBottom = scrollTop + content.innerHeight();
+                    contentTop = content[0].offsetTop;
                     elementTop = el[0].offsetTop;
-                    elementRelativeTop = elementTop - containerTop;
+                    elementRelativeTop = elementTop - contentTop;
                     elementRelativeBottom = elementRelativeTop + el.outerHeight();
-                    previousBreak = root.topBreaks[index - root.toppedOut];
-                    nextBreak = root.bottomBreaks[index + root.bottomedOut];
+                    previousBreak = root.topBreaks[index - root.toppedOut] ? root.topBreaks[index - root.toppedOut] : 0;
+                    nextBreak = root.bottomBreaks[index + root.bottomedOut] ? root.bottomBreaks[index + root.bottomedOut] : 0;
 
                     if (!previousHeight) {
                         previousHeight = root.stackElements[index - 1] ? root.stackElements[index - 1].outerHeight() : 0;
@@ -154,101 +208,113 @@
 
                     var state = root.states[index];
                     var pastTop = scrollTop + previousBreak + previousHeight > elementRelativeTop;
-                    var pastPreviousBreak = scrollTop + previousBreak > elementRelativeTop;
-                    var pastNextBreak = scrollBottom - nextBreak < elementRelativeBottom;
+                    var pastPreviousBreak = scrollTop + previousBreak + root.toppedOut * root.collapseSize + (index > root.maxTop ? el.outerHeight() : 0) > elementRelativeTop;
+                    var pastNextBreak = scrollBottom - nextBreak - root.bottomedOut * root.collapseSize - ((root.stacks.length - 1 - index) > root.maxBottom ? el.outerHeight() : 0) < elementRelativeBottom;
                     var pastBottom = scrollBottom - nextBreak - nextHeight < elementRelativeBottom;
-
-
-
 
                     // Determine State
 
-                    if (root.states[index] === 1) {
-                        if (root.states[index + root.maxTop] == 3) {
-                            // Move Down
-                            root.states[index] = 2;
-                            root.toppedOut--;
-                            return;
-                        }
-                        return;
-                    }
+                    if (pastPreviousBreak) {
 
-                    if (root.states[index] === 2) {
-                        if (root.states[index + root.maxTop] == 2) {
-                            // Move Up
-                            root.states[index] = 1;
-                            root.toppedOut++;
+                        // if should be hidden
+                        if (root.states[index + 1 + root.maxTop] < 3) {
+
+                            if (root.states[index] > 1) {
+                                root.states[index] = 1;
+                                root.toppedOut++;
+                                update();
+                            }
+
+                            clone.css({
+                                display: 'block',
+                                top: index * root.collapseSize + 'px',
+                                bottom: 'initial',
+                                zIndex: -(index - root.stacks.length)
+                            });
+
+                            return;
+                        } else {
+
+                            // remove from hidden
+                            if (root.states[index] == 1) {
+                                root.states[index] = 2;
+                                root.toppedOut--;
+                                update();
+                            }
+
+                            // make sticky
+                            if (root.states[index] > 2) {
+                                root.states[index] = 2;
+                                update();
+                            }
+
+                            clone.css({
+                                display: 'block',
+                                top: previousBreak + root.toppedOut * root.collapseSize + 'px',
+                                bottom: 'initial',
+                                zIndex: -(index - root.stacks.length)
+                            });
+
                             return;
                         }
-                        if (!pastTop) {
-                            // Move Down
-                            root.states[index] = 3;
-                            update();
+                    } else if (pastNextBreak) {
+
+                        // if should be hidden
+                        if (root.states[index + 1 - root.maxBottom] > 3) {
+
+                            if (root.states[index] < 5) {
+                                root.states[index] = 5;
+                                root.bottomedOut++;
+                                update();
+                            }
+
+                            clone.css({
+                                display: 'block',
+                                bottom: (root.stacks.length - 1 - index) * root.collapseSize + 'px',
+                                top: 'initial',
+                                zIndex: index
+                            });
+
+                            return;
+                        } else {
+
+                            // remove from hidden
+                            if (root.states[index] == 5) {
+                                root.states[index] = 4;
+                                root.bottomedOut--;
+                                update();
+                            }
+
+                            // make sticky
+                            if (root.states[index] < 4) {
+                                root.states[index] = 4;
+                                update();
+                            }
+
+                            clone.css({
+                                display: 'block',
+                                bottom: nextBreak + (root.bottomedOut * root.collapseSize) + 'px',
+                                top: 'initial',
+                                zIndex: 0
+                            });
+
                             return;
                         }
-                        el.css({
-                            transform: 'translateY(' + (scrollTop + previousBreak - elementRelativeTop) + 'px)',
-                            zIndex: 1
+
+                    } else {
+
+                        root.states[index] = 3;
+
+                        clone.css({
+                            top: 'initial',
+                            bottom: (root.stacks.length - index) * root.collapseSize + 'px',
+                            zIndex: -(index - root.stacks.length),
+                            display: 'none'
                         });
+
                         return;
                     }
 
-                    if (root.states[index] == 3) {
-                        if (pastPreviousBreak) {
-                            // Move Up
-                            root.states[index] = 2;
-                            update();
-                            return;
-                        }
-                        if (pastNextBreak) {
-                            // Move Down
-                            root.states[index] = 4;
-                            update();
-                            return;
-                        }
-                        el.css({
-                            transform: 'translateY(0px)',
-                            zIndex: -index + root.stacks.length
-                        });
-                        return;
-                    }
-
-                    if (root.states[index] === 4) {
-                        if (root.states[index - root.maxBottom] == 4) {
-                            // Move down
-                            root.states[index] = 5;
-                            root.bottomedOut++;
-                            update();
-                            return;
-                        }
-                        if (!pastBottom) {
-                            // Move Down
-                            root.states[index] = 3;
-                            update();
-                            return;
-                        }
-                        el.css({
-                            transform: 'translateY(' + (scrollBottom - nextBreak - elementRelativeBottom) + 'px)',
-                            zIndex: -index + root.stacks.length
-                        });
-                        return;
-                    }
-
-
-                    if (root.states[index] === 5) {
-                        if (root.states[index - root.maxTop] == 3) {
-                            // Move Up
-                            root.states[index] = 4;
-                            root.bottomedOut--;
-                            update();
-                            return;
-                        }
-                        el.css({
-                            transform: 'translateY(0px)',
-                            zIndex: -index + root.stacks.length
-                        });
-                        return;
-                    }
                 }
             },
         };
