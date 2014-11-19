@@ -7,6 +7,7 @@ A superlative, scrolling accordion directive for AngularJS.  This ain't yo grand
 1. `bower install nz-accordi-scroll`
 2. Include the `nzAccordiScroll.js` file
 3. Include `nzAccordiScroll` as a dependency (i.e. in `app.js`)
+4. For basic styling tips, see the demo/example
 
 Utilize Like So:
 
