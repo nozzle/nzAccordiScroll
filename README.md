@@ -4,7 +4,7 @@ A superlative, scrolling accordion directive for AngularJS.  This ain't yo grand
 ## [Demo](http://codepen.io/tannerlinsley/pen/vEEZgZ)
 
 ## Install
-1. `bower install nz-sweet-alert`
+1. `bower install nz-accordi-scroll`
 2. Include the `nzAccordiScroll.js` file
 3. Include `nzAccordiScroll` as a dependency (i.e. in `app.js`)
 
@@ -23,7 +23,7 @@ Basic Usage:
 ```
 Custom Top/Bottom Max's:
 ```html
-<div nz-accordi-scroll show-stacks="[4, 4]">
+<div nz-accordi-scroll show-stacks="[4, 4]" or show-stacks="4">
     <stack>Stack 1</stack>
     Some Content...
     <stack>Stack 2</stack>
