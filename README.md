@@ -34,7 +34,7 @@ Custom Top/Bottom Max's:
 ```
 Custom Collapse Size:
 ```html
-<div nz-accordi-scroll show-stacks="0" collapse-size="10">
+<div nz-accordi-scroll collapse-size="10">
     <stack>Stack 1</stack>
     Some Content...
     <stack>Stack 2</stack>
