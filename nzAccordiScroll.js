@@ -101,7 +101,7 @@
                     position: 'relative'
                 });
                 var content = el.find('.nzAccordiScroll-content').css({
-                    overflow: 'scroll',
+                    overflowY: 'scroll',
                     height: '100%',
                     width: '100%',
                     zIndex: -1,
