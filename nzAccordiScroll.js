@@ -111,6 +111,21 @@
                     paddingRight: '25px',
                     boxSizing: 'content-box',
                 });
+
+                content.bind('touchmove', drag);
+                content.bind('mousedown', function() {
+                    window.addEventListener('mousemove', drag);
+                    window.addEventListener('mouseup', function(e) {
+                        drag(e);
+                        window.removeEventListener('mousemove', drag);
+                    });
+                });
+
+                function drag(e) {
+                    if (content[0].scrollLeft > 0) {
+                        content[0].scrollLeft = 0;
+                    }
+                }
             }
         };
     });
