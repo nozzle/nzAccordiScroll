@@ -16,45 +16,52 @@
             ].join(' '),
             controller: function($scope) {
 
-                var root = this;
+                var root = $scope.root = this;
 
-                root.states = [];
-                root.stacks = [];
-                root.stackElements = [];
-                root.topActive = [];
-                root.bottomActive = [];
-                root.topBreaks = [];
-                root.bottomBreaks = [];
-                root.toppedOut = 0;
-                root.bottomedOut = 0;
+                init();
 
-                root.collapseSize = $scope.collapseSize || 2;
 
-                if (typeof $scope.showStacks != 'undefined') {
-                    root.hasMaxTop = true;
-                    root.hasMaxBottom = true;
-                    if (typeof $scope.showStacks == 'object') {
-                        root.maxTop = $scope.showStacks[0];
-                        root.maxBottom = $scope.showStacks[1] + 2;
-                    } else if (typeof $scope.showStacks == 'number') {
-                        root.maxTop = $scope.showStacks;
-                        root.maxBottom = $scope.showStacks + 2;
-                    }
-                    if (typeof root.maxTop != 'undefined' &&
-                        root.maxTop < 1) {
-                        root.maxTop = 1;
-                    }
+                function init() {
+                    root.scopes = [];
+                    root.states = [];
+                    root.stacks = [];
+                    root.stackElements = [];
+                    root.topBreaks = [];
+                    root.bottomBreaks = [];
+                    root.topActive = [];
+                    root.bottomActive = [];
+                    root.topBreaks = [];
+                    root.bottomBreaks = [];
+                    root.toppedOut = 0;
+                    root.bottomedOut = 0;
 
-                    if (typeof root.maxBottom != 'undefined' &&
-                        root.maxBottom < 3) {
-                        root.maxBottom = 3;
+                    root.collapseSize = $scope.collapseSize || 2;
+
+                    if (typeof $scope.showStacks != 'undefined') {
+                        root.hasMaxTop = true;
+                        root.hasMaxBottom = true;
+                        if (typeof $scope.showStacks == 'object') {
+                            root.maxTop = $scope.showStacks[0];
+                            root.maxBottom = $scope.showStacks[1] + 2;
+                        } else if (typeof $scope.showStacks == 'number') {
+                            root.maxTop = $scope.showStacks;
+                            root.maxBottom = $scope.showStacks + 2;
+                        }
+                        if (typeof root.maxTop != 'undefined' &&
+                            root.maxTop < 1) {
+                            root.maxTop = 1;
+                        }
+
+                        if (typeof root.maxBottom != 'undefined' &&
+                            root.maxBottom < 3) {
+                            root.maxBottom = 3;
+                        }
                     }
                 }
 
 
-
-
-                root.register = function(index, el) {
+                root.register = function(index, el, scope) {
+                    root.scopes[index] = scope;
                     root.stacks[index] = el.outerHeight() - 1;
                     root.states[index] = 3;
                     root.stackElements[index] = el;
@@ -91,12 +98,16 @@
                 }
 
                 root.refresh = function() {
-                    root.topBreaks = [];
-                    root.bottomBreaks = [];
-                    $scope.$broadcast('reregister');
+                    angular.forEach(root.scopes, function(scope) {
+                        if (scope &&
+                            scope.init) {
+                            scope.init();
+                        }
+                    });
                 };
             },
             link: function($scope, el, attrs) {
+
                 el.css({
                     position: 'relative',
                     overflow: 'hidden',
@@ -121,11 +132,18 @@
                     });
                 });
 
+                $scope.$watch(function() {
+                    return el.innerHeight();
+                }, function() {
+                    $scope.root.refresh();
+                });
+
                 function drag(e) {
                     if (content[0].scrollLeft > 0) {
                         content[0].scrollLeft = 0;
                     }
                 }
+
             }
         };
     });
@@ -143,56 +161,85 @@
 
                 var container = el.closest('.nzAccordiScroll');
                 var content = el.closest('.nzAccordiScroll-content');
-
-                el.css({
-                    cursor: 'pointer',
-                    position: 'relative',
-                    transition: 'all .1s linear',
-                    userSelect: 'none',
-                    overflow: 'hidden',
-                });
-
                 var clone = el.clone().appendTo(container);
 
-                clone.css({
-                    position: 'absolute',
-                    width: '100%',
-                    display: 'none',
-                    bottom: '0'
-                });
-
-
-                var index = el.siblings(".stack").andSelf().index(el);
-                var scrollTop = container.scrollTop();
-                var scrollBottom = scrollTop + container.innerHeight();
-                var containerTop = container[0].offsetTop;
-                var elementTop = el[0].offsetTop;
-                var elementRelativeTop = elementTop - containerTop;
-                var elementRelativeBottom = elementRelativeTop + el.outerHeight();
+                var index;
+                var scrollTop;
+                var scrollBottom;
+                var containerTop;
+                var elementTop;
+                var elementRelativeTop;
+                var elementRelativeBottom;
                 var previousHeight;
                 var previousBreak;
                 var nextHeight;
                 var nextBreak;
 
                 clone.click(go);
-                root.register(index, el);
                 angular.element(window).bind('scroll', update);
                 content.bind('scroll', update);
-                update();
+                el.on('$destroy', function() {
+                    setTimeout(function() {
+                        clone.remove();
+                        root.refresh();
+                    }, 100);
+                });
 
-                if (root.preScroll) {
-                    clearTimeout(root.preScroll);
-                }
-                root.preScroll = setTimeout(function() {
-                    content.animate({
-                        scrollTop: content[0].scrollHeight > 800 ? 800 : content[0].scrollHeight
-                    }, 0);
-                    content.animate({
-                        scrollTop: 0
-                    }, 800);
-                }, 400);
+                $scope.init = function() {
 
-                $scope.go = go;
+                    el.css({
+                        cursor: 'pointer',
+                        position: 'relative',
+                        transition: 'all .1s linear',
+                        userSelect: 'none',
+                        overflow: 'hidden',
+                    });
+
+
+                    clone.css({
+                        cursor: 'pointer',
+                        position: 'absolute',
+                        transition: 'all .1s linear',
+                        width: '100%',
+                        userSelect: 'none',
+                        display: 'none',
+                        bottom: '0',
+                        overflow: 'hidden',
+                    });
+
+
+                    index = content.find(".stack").index(el);
+                    scrollTop = container.scrollTop();
+                    scrollBottom = scrollTop + container.innerHeight();
+                    containerTop = container[0].offsetTop;
+                    elementTop = el[0].offsetTop;
+                    elementRelativeTop = elementTop - containerTop;
+                    elementRelativeBottom = elementRelativeTop + el.outerHeight();
+
+                    root.register(index, el, $scope);
+
+
+                    if (root.preScroll) {
+                        clearTimeout(root.preScroll);
+                    }
+                    root.preScroll = setTimeout(function() {
+                        content.animate({
+                            scrollTop: content[0].scrollHeight > 800 ? 800 : content[0].scrollHeight
+                        }, 0);
+                        content.animate({
+                            scrollTop: 0
+                        }, 800);
+                    }, 400);
+
+                    $scope.go = go;
+
+
+                    update();
+
+
+                };
+
+                $scope.init();
 
                 function go() {
                     content.animate({
@@ -200,13 +247,6 @@
                     }, 800);
                 }
 
-                $scope.$on('$destroy', function() {
-                    root.refresh();
-                });
-
-                $scope.$on('reregister', function() {
-                    root.register(index, el);
-                });
 
 
 
@@ -246,6 +286,8 @@
                     var pastBottom = scrollBottom - nextBreak - nextHeight < elementRelativeBottom;
 
                     // Determine State
+
+                    clone.html(el.html());
 
                     if (pastPreviousBreak) {
 
