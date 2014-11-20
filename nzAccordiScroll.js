@@ -102,10 +102,13 @@
                 });
                 var content = el.find('.nzAccordiScroll-content').css({
                     overflowY: 'scroll',
+                    overflowX: 'hidden',
                     height: '100%',
                     width: '100%',
                     zIndex: -1,
-                    WebkitOverflowScrolling: 'touch'
+                    WebkitOverflowScrolling: 'touch',
+                    paddingRight: '25px',
+                    boxSizing: 'content-box'
                 });
             }
         };
