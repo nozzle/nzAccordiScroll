@@ -98,7 +98,8 @@
             },
             link: function($scope, el, attrs) {
                 el.css({
-                    position: 'relative'
+                    position: 'relative',
+                    overflow: 'hidden',
                 });
                 var content = el.find('.nzAccordiScroll-content').css({
                     overflowY: 'scroll',
@@ -108,7 +109,7 @@
                     zIndex: -1,
                     WebkitOverflowScrolling: 'touch',
                     paddingRight: '25px',
-                    boxSizing: 'content-box'
+                    boxSizing: 'content-box',
                 });
             }
         };
@@ -131,10 +132,17 @@
                 el.css({
                     cursor: 'pointer',
                     position: 'relative',
-                    transition: 'all .1s linear'
+                    transition: 'all .1s linear',
+                    userSelect: 'none',
+                    overflow: 'hidden',
                 });
 
                 var clone = el.clone().appendTo(container);
+
+                el.css({
+                    width: '150%',
+                    paddingRight: '50%'
+                });
 
                 clone.css({
                     position: 'absolute',
