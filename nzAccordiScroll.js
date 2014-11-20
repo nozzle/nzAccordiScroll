@@ -2,7 +2,7 @@
 
     var module = angular.module('nzAccordiScroll', []);
 
-    module.directive('nzAccordiScroll', function() {
+    module.directive('nzAccordiScroll', ['$timeout', function($timeout) {
         return {
             restrict: 'EA',
             transclude: true,
@@ -16,13 +16,10 @@
             ].join(' '),
             controller: function($scope) {
 
-                var root = $scope.root = this;
+                var root = this;
+                $scope.root = root;
 
-                init();
-
-
-                function init() {
-                    root.scopes = [];
+                root.init = function() {
                     root.states = [];
                     root.stacks = [];
                     root.stackElements = [];
@@ -57,11 +54,28 @@
                             root.maxBottom = 3;
                         }
                     }
-                }
+                };
+
+                var debounce;
+
+                root.build = function(container) {
+                    if (debounce) {
+                        $timeout.cancel(debounce);
+                    }
+                    debounce = $timeout(function() {
+                        root.init();
+                        angular.forEach(container.find('.stack.original'), function(stack, index) {
+
+                            if (angular.element(stack).scope().init) {
+                                angular.element(stack).scope().init(index);
+                            }
+                        });
+                        $timeout.cancel(debounce);
+                    }, 100);
+                };
 
 
-                root.register = function(index, el, scope) {
-                    root.scopes[index] = scope;
+                root.register = function(index, el) {
                     root.stacks[index] = el.outerHeight() - 1;
                     root.states[index] = 3;
                     root.stackElements[index] = el;
@@ -97,14 +111,9 @@
                     }
                 }
 
-                root.refresh = function() {
-                    angular.forEach(root.scopes, function(scope) {
-                        if (scope &&
-                            scope.init) {
-                            scope.init();
-                        }
-                    });
-                };
+                root.init();
+
+                window.tanner = root;
             },
             link: function($scope, el, attrs) {
 
@@ -132,12 +141,6 @@
                     });
                 });
 
-                $scope.$watch(function() {
-                    return el.innerHeight();
-                }, function() {
-                    $scope.root.refresh();
-                });
-
                 function drag(e) {
                     if (content[0].scrollLeft > 0) {
                         content[0].scrollLeft = 0;
@@ -146,12 +149,13 @@
 
             }
         };
-    });
+    }]);
 
-    module.directive('stack', function() {
+    module.directive('stack', ['$timeout', function($timeout) {
         return {
             restrict: 'EA',
             transclude: true,
+            scope: true,
             replace: true,
             require: '^nzAccordiScroll',
             template: [
@@ -161,7 +165,8 @@
 
                 var container = el.closest('.nzAccordiScroll');
                 var content = el.closest('.nzAccordiScroll-content');
-                var clone = el.clone().appendTo(container);
+                var clone = el.clone().addClass('clone').appendTo(container);
+                el.addClass('original');
 
                 var index;
                 var scrollTop;
@@ -179,13 +184,15 @@
                 angular.element(window).bind('scroll', update);
                 content.bind('scroll', update);
                 el.on('$destroy', function() {
-                    setTimeout(function() {
+                    $timeout(function() {
                         clone.remove();
-                        root.refresh();
+                        root.build(container);
                     }, 100);
                 });
 
-                $scope.init = function() {
+                $scope.init = function(i) {
+
+                    index = i;
 
                     el.css({
                         cursor: 'pointer',
@@ -207,8 +214,6 @@
                         overflow: 'hidden',
                     });
 
-
-                    index = content.find(".stack").index(el);
                     scrollTop = container.scrollTop();
                     scrollBottom = scrollTop + container.innerHeight();
                     containerTop = container[0].offsetTop;
@@ -216,13 +221,13 @@
                     elementRelativeTop = elementTop - containerTop;
                     elementRelativeBottom = elementRelativeTop + el.outerHeight();
 
-                    root.register(index, el, $scope);
+                    root.register(index, el);
 
 
                     if (root.preScroll) {
-                        clearTimeout(root.preScroll);
+                        $timeout.cancel(root.preScroll);
                     }
-                    root.preScroll = setTimeout(function() {
+                    root.preScroll = $timeout(function() {
                         content.animate({
                             scrollTop: content[0].scrollHeight > 800 ? 800 : content[0].scrollHeight
                         }, 0);
@@ -233,13 +238,11 @@
 
                     $scope.go = go;
 
-
                     update();
-
 
                 };
 
-                $scope.init();
+                root.build(container);
 
                 function go() {
                     content.animate({
@@ -387,6 +390,6 @@
                 }
             },
         };
-    });
+    }]);
 
 })();

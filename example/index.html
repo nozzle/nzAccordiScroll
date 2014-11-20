@@ -302,10 +302,29 @@
         </div>
         <div class="row">
             <div class="col-sm-6">
-                <h3 class="text-center">Using ng-repeat! (Development In Progress...)</h3>
-                <div nz-accordi-scroll class="card" ng-init="stacks = [1,2,3,4,5,6]">
+                <h3 class="text-center">Using ng-repeat!</h3>
+                <div nz-accordi-scroll class="card" ng-init="stacks = [1,2,3,]">
                     <div ng-repeat="test in stacks track by $index">
-                        <stack>Stack {{test}}</stack>
+                        <stack>Stack A{{test}}</stack>
+                        <ul>
+                            <li>Morbi in sem quis dui placerat ornare. Pellentesque odio nisi, euismod in, pharetra a, ultricies in, diam. Sed arcu. Cras consequat.</li>
+                            <li>Praesent dapibus, neque id cursus faucibus, tortor neque egestas augue, eu vulputate magna eros eu erat. Aliquam erat volutpat. Nam dui mi, tincidunt quis, accumsan porttitor, facilisis luctus, metus.</li>
+                            <li>Phasellus ultrices nulla quis nibh. Quisque a lectus. Donec consectetuer ligula vulputate sem tristique cursus. Nam nulla quam, gravida non, commodo a, sodales sit amet, nisi.</li>
+                            <li>Pellentesque fermentum dolor. Aliquam quam lectus, facilisis auctor, ultrices ut, elementum vulputate, nunc.</li>
+                        </ul>
+                    </div>
+                    <stack>
+                        Hard Coded Stack
+                    </stack>
+                    This is some hard coded stuff...
+                    <ul>
+                        <li>Morbi in sem quis dui placerat ornare. Pellentesque odio nisi, euismod in, pharetra a, ultricies in, diam. Sed arcu. Cras consequat.</li>
+                        <li>Praesent dapibus, neque id cursus faucibus, tortor neque egestas augue, eu vulputate magna eros eu erat. Aliquam erat volutpat. Nam dui mi, tincidunt quis, accumsan porttitor, facilisis luctus, metus.</li>
+                        <li>Phasellus ultrices nulla quis nibh. Quisque a lectus. Donec consectetuer ligula vulputate sem tristique cursus. Nam nulla quam, gravida non, commodo a, sodales sit amet, nisi.</li>
+                        <li>Pellentesque fermentum dolor. Aliquam quam lectus, facilisis auctor, ultrices ut, elementum vulputate, nunc.</li>
+                    </ul>
+                    <div ng-repeat="test in stacks track by $index">
+                        <stack>Stack B{{test}}</stack>
                         <ul>
                             <li>Morbi in sem quis dui placerat ornare. Pellentesque odio nisi, euismod in, pharetra a, ultricies in, diam. Sed arcu. Cras consequat.</li>
                             <li>Praesent dapibus, neque id cursus faucibus, tortor neque egestas augue, eu vulputate magna eros eu erat. Aliquam erat volutpat. Nam dui mi, tincidunt quis, accumsan porttitor, facilisis luctus, metus.</li>
