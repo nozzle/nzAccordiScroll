@@ -154,11 +154,6 @@
 
                 var clone = el.clone().appendTo(container);
 
-                el.css({
-                    width: '150%',
-                    paddingRight: '50%'
-                });
-
                 clone.css({
                     position: 'absolute',
                     width: '100%',

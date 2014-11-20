@@ -12,6 +12,7 @@ body {
 }
 .stack {
     background: #006c7f;
+    text-align: center;
     color: white;
     padding: .1em .4em;
     border-top: solid 1px rgba(255, 255, 255, .2);
