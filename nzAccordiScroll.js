@@ -112,8 +112,6 @@
                 }
 
                 root.init();
-
-                window.tanner = root;
             },
             link: function($scope, el, attrs) {
 
