@@ -124,7 +124,7 @@
                     overflowX: 'hidden',
                     height: '100%',
                     width: '100%',
-                    zIndex: -1,
+                    zIndex: 100 - 1,
                     WebkitOverflowScrolling: 'touch',
                     paddingRight: '25px',
                     boxSizing: 'content-box',
@@ -304,7 +304,7 @@
                                 display: 'block',
                                 top: index * root.collapseSize + 'px',
                                 bottom: 'initial',
-                                zIndex: -(index - root.stacks.length)
+                                zIndex: 100 - (index - root.stacks.length)
                             });
 
                             return;
@@ -325,7 +325,7 @@
                                 display: 'block',
                                 top: previousBreak + root.toppedOut * root.collapseSize + 'px',
                                 bottom: 'initial',
-                                zIndex: -(index - root.stacks.length)
+                                zIndex: 100 - (index - root.stacks.length)
                             });
 
                             return;
@@ -344,7 +344,7 @@
                                 display: 'block',
                                 bottom: (root.stacks.length - 1 - index) * root.collapseSize + 'px',
                                 top: 'initial',
-                                zIndex: index
+                                zIndex: 100 - index
                             });
 
                             return;
@@ -365,7 +365,7 @@
                                 display: 'block',
                                 bottom: nextBreak + (root.bottomedOut * root.collapseSize) + 'px',
                                 top: 'initial',
-                                zIndex: 0
+                                zIndex: 100
                             });
 
                             return;
@@ -378,7 +378,7 @@
                         clone.css({
                             top: 'initial',
                             bottom: (root.stacks.length - index) * root.collapseSize + 'px',
-                            zIndex: -(index - root.stacks.length),
+                            zIndex: 100 - (index - root.stacks.length),
                             display: 'none'
                         });
 
