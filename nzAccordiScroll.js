@@ -344,7 +344,7 @@
                                 display: 'block',
                                 bottom: (root.stacks.length - 1 - index) * root.collapseSize + 'px',
                                 top: 'initial',
-                                zIndex: 100 - index
+                                zIndex: 100 + index
                             });
 
                             return;
