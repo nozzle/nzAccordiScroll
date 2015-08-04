@@ -1,4 +1,6 @@
 # nzAccordiScroll
+
+[![Join the chat at https://gitter.im/nozzle/nzAccordiScroll](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/nozzle/nzAccordiScroll?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 A superlative, scrolling accordion directive for AngularJS.  This ain't yo grandma's accordion...
 
 ## [Demo](http://codepen.io/tannerlinsley/pen/vEEZgZ)
